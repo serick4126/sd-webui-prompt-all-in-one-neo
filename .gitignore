@@ -13,3 +13,6 @@ __pycache__
 AGENTS.local.md
 docs/PROJECT_LOG.md
 .github/copilot-instructions.md
+# Internal agent documentation
+AGENTS.md
+
