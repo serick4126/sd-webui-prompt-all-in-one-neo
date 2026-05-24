@@ -48,6 +48,7 @@ export default {
             this.dropIsStart = true
         },
         onDropMouseMove(e) {
+            if (this.droping) return
             if (this.dropIsStart) {
                 this.dropIsSelecting = true
                 this.dropEndX = e.clientX - this.dropOffsetX
@@ -73,6 +74,7 @@ export default {
             this.$emit('hideExtraNetworks')
         },
         dropSelectItems() {
+            if (this.droping) return
             if (this.dropTimeId) clearTimeout(this.dropTimeId)
             let selectIds = []
             for (let i = 0; i < this.$refs.promptTagsList.children.length; i++) {
@@ -95,6 +97,10 @@ export default {
             }
         },
         onDropMouseUp(e) {
+            if (this.droping) {
+                this._dropOver()
+                return
+            }
             this.dropIsSelecting = false
             this.dropIsStart = false
             this.dropIsEnd = true
