@@ -34,6 +34,12 @@
 
 ## 🆕 What's New
 
+### v0.3.3 — Drag Fix
+
+> Fixes a drag-and-drop regression where tags could leak into other prompts.
+
+- **Fixed selection-box interference during drag** — dragging a tag no longer accidentally triggers the multi-select box, which previously corrupted the DOM and caused tags to appear in the wrong prompt area
+
 ### v0.3.2 — Stability Patch
 
 > Small patch focused on a smoother BREAK / AND experience.
@@ -53,6 +59,12 @@
 ---
 
 ## 📖 Changelog
+
+### v0.3.3 — Drag Fix
+> Fixes a drag-and-drop regression introduced after the BREAK / AND separator improvements.
+
+- Guarded the selection-box logic (`dropMixin.js`) so it aborts while a Sortable drag is active
+- Prevents DOM corruption that caused dragged tags to appear in other prompts or lists
 
 ### v0.3.2 — Stability Patch
 > Focused fix release for BREAK / AND interaction flow.
@@ -108,6 +120,9 @@
 ---
 
 ## 🗺️ Roadmap
+
+### v0.3.3 — Drag Fix *(complete)*
+- Fixed selection-box interference during Sortable drag ✅
 
 ### v0.3.2 — Stability Patch *(complete)*
 - Better issue detection for BREAK / AND interactions ✅
@@ -370,7 +385,6 @@ Most have a free tier — register and obtain a key:
 - Full compatibility with Forge Neo
 - Quality Presets with CivitAI model detection
 - BREAK / AND visual separators, Favorites export / import
-- Translation API credentials in Forge Settings
 - Various UX fixes from upstream community reports
 
 ### Special Thanks
