@@ -184,7 +184,11 @@
                 "is_remove_before_line_comma": "是否去除换行前面的逗号。<br/>勾选后输出为“aaa, bbb<br/>ccc”。<br/>取消勾选输出为“aaa, bbb,<br/>ccc”。",
                 "auto_load_webui_prompt": "自动加载WebUI提示词变动。<br/>勾选后，当WebUI中提示词输入框的内容变动时，插件会自动加载关键词解析并格式化。<br/>未勾选，当WebUI中提示词输入框的内容变动时，需要手动点击加载提示词按钮。",
                 "load_webui_prompt": "加载WebUI提示词",
-                "is_split_variant_group": "将 Dynamic Prompts 候选组分割为可单独编辑的叶标签。<br/>勾选后，<code>{a|b|c}</code> 将被展开，每个叶标签可独立编辑。<br/>取消勾选后，<code>{a|b|c}</code> 将保持为一个原子标签。"
+                "is_split_variant_group": "将 Dynamic Prompts 候选组分割为可单独编辑的叶标签。<br/>勾选后，<code>{a|b|c}</code> 将被展开，每个叶标签可独立编辑。<br/>取消勾选后，<code>{a|b|c}</code> 将保持为一个原子标签。",
+                "variant_group_edit": "编辑原始文本",
+                "variant_group_disable": "禁用候选组",
+                "variant_group_enable": "启用候选组",
+                "variant_group_delete": "删除候选组"
             }
         },
         {
@@ -556,7 +560,11 @@
                 "is_remove_before_line_comma": "是否移除換行前面的逗號。<br/>勾選後輸出為「aaa, bbb<br/>ccc」。<br/>取消勾選輸出為「aaa, bbb,<br/>ccc」。",
                 "auto_load_webui_prompt": "自動載入WebUI提示詞變動。<br/>勾選後，當WebUI中提示詞輸入框的內容變動時，插件會自動載入關鍵詞解析並格式化。<br/>未勾選，當WebUI中提示詞輸入框的內容變動時，需要手動點擊載入提示詞按鈕。",
                 "load_webui_prompt": "載入WebUI提示詞",
-                "is_split_variant_group": "將 Dynamic Prompts 候選組分割為可單獨編輯的葉標籤。<br/>勾選後，<code>{a|b|c}</code> 將被展開，每個葉標籤可獨立編輯。<br/>取消勾選後，<code>{a|b|c}</code> 將保持為一個原子標籤。"
+                "is_split_variant_group": "將 Dynamic Prompts 候選組分割為可單獨編輯的葉標籤。<br/>勾選後，<code>{a|b|c}</code> 將被展開，每個葉標籤可獨立編輯。<br/>取消勾選後，<code>{a|b|c}</code> 將保持為一個原子標籤。",
+                "variant_group_edit": "編輯原始文本",
+                "variant_group_disable": "停用候選組",
+                "variant_group_enable": "啟用候選組",
+                "variant_group_delete": "刪除候選組"
             }
         },
         {
@@ -742,7 +750,11 @@
                 "is_remove_before_line_comma": "Whether to remove the comma before a line break.<br/>If checked, the output will be \"aaa, bbb<br/>ccc\".<br/>If unchecked, the output will be \"aaa, bbb,<br/>ccc\".",
                 "auto_load_webui_prompt": "Auto-load WebUI prompt changes.<br/>When checked, the plugin will automatically load and format keyword parsing when the content of the prompt input box in WebUI changes.<br/>When unchecked, you need to manually click the load prompt button when the content of the prompt input box in WebUI changes.",
                 "load_webui_prompt": "Load WebUI prompt",
-                "is_split_variant_group": "Split Dynamic Prompts variant groups into individual leaf tags for editing.<br/>When checked, <code>{a|b|c}</code> will be expanded so each leaf tag can be edited independently.<br/>When unchecked, <code>{a|b|c}</code> will remain as one atomic tag."
+                "is_split_variant_group": "Split Dynamic Prompts variant groups into individual leaf tags for editing.<br/>When checked, <code>{a|b|c}</code> will be expanded so each leaf tag can be edited independently.<br/>When unchecked, <code>{a|b|c}</code> will remain as one atomic tag.",
+                "variant_group_edit": "Edit raw text",
+                "variant_group_disable": "Disable variant group",
+                "variant_group_enable": "Enable variant group",
+                "variant_group_delete": "Delete variant group"
             }
         },
         {
@@ -1937,7 +1949,11 @@
                 "is_remove_before_line_comma": "改行の前のカンマを削除するかどうか。<br/>チェックすると、出力は「aaa, bbb<br/>ccc」となります。<br/>チェックを外すと、出力は「aaa, bbb,<br/>ccc」となります。",
                 "auto_load_webui_prompt": "WebUIプロンプトの変更を自動的にロードします。<br/>チェックすると、WebUIのプロンプト入力ボックスの内容が変更されたとき、プラグインはキーワードの解析とフォーマットを自動的にロードします。<br/>チェックしない場合、WebUIのプロンプト入力ボックスの内容が変更されたときに手動でプロンプトのロードボタンをクリックする必要があります。",
                 "load_webui_prompt": "WebUIプロンプトのロード",
-                "is_split_variant_group": "Dynamic Prompts の候補グループを個別編集可能なリーフタグに分割します。<br/>有効時、<code>{a|b|c}</code> が展開され各リーフタグを個別に編集できます。<br/>無効時、<code>{a|b|c}</code> は1つのアトミックタグのままです。"
+                "is_split_variant_group": "Dynamic Prompts の候補グループを個別編集可能なリーフタグに分割します。<br/>有効時、<code>{a|b|c}</code> が展開され各リーフタグを個別に編集できます。<br/>無効時、<code>{a|b|c}</code> は1つのアトミックタグのままです。",
+                "variant_group_edit": "生テキストを編集",
+                "variant_group_disable": "候補グループを無効化",
+                "variant_group_enable": "候補グループを有効化",
+                "variant_group_delete": "候補グループを削除"
             }
         },
         {

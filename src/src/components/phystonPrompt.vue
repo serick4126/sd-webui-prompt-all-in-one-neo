@@ -303,9 +303,24 @@
                                     <span v-if="tag.groupMeta.sigil" class="variant-meta">{{ tag.groupMeta.sigil }}</span>
                                     <span v-if="tag.groupMeta.count" class="variant-meta">{{ tag.groupMeta.count }}$$</span>
                                     <span v-if="tag.groupMeta.customSep" class="variant-meta">"{{ tag.groupMeta.customSep }}"</span>
-                                    <button class="variant-btn" @click="onGroupEditClick(tag.id)">Edit</button>
-                                    <button class="variant-btn" @click="onDisabledTagClick(tag.id)">{{ tag.disabled ? 'Enable' : 'Disable' }}</button>
-                                    <button class="variant-btn" @click="onDeleteTagClick(tag.id)">Del</button>
+                                    <button type="button" class="variant-btn"
+                                            v-tooltip="getLang('variant_group_edit')"
+                                            @click="onGroupEditClick(tag.id)"
+                                            @mousedown.stop="" @mousemove.stop="" @mouseup.stop="">
+                                        <icon-svg name="edit"/>
+                                    </button>
+                                    <button type="button" class="variant-btn"
+                                            v-tooltip="getLang(tag.disabled ? 'variant_group_enable' : 'variant_group_disable')"
+                                            @click="onDisabledTagClick(tag.id)"
+                                            @mousedown.stop="" @mousemove.stop="" @mouseup.stop="">
+                                        <icon-svg :name="tag.disabled ? 'enable' : 'disabled'"/>
+                                    </button>
+                                    <button type="button" class="variant-btn"
+                                            v-tooltip="getLang('variant_group_delete')"
+                                            @click="onDeleteTagClick(tag.id)"
+                                            @mousedown.stop="" @mousemove.stop="" @mouseup.stop="">
+                                        <icon-svg name="close"/>
+                                    </button>
                                 </div>
                                 <textarea v-if="editing[tag.id]" class="scroll-hide svelte-4xt1ch input-tag-edit"
                                           :value="groupRawText(tag)"
@@ -314,6 +329,7 @@
                                           @keydown="onGroupEditKeyDown(tag.id, $event)"></textarea>
                                 <div v-else class="variant-options">
                                     <div v-for="(opt, oi) in tag.options" :key="oi" class="variant-option-row">
+                                        <span class="variant-option-marker">|</span>
                                         <span v-if="opt.weightMeta" class="option-weight">{{ opt.weightMeta }}::</span>
                                         <div v-for="leaf in opt.leaves" :key="leaf.id" class="prompt-tag leaf-tag"
                                              @mouseenter="showLeafExtendId = leaf.id"
@@ -1754,6 +1770,16 @@ export default {
         },
         _appendGroupTag(parsed, index = -1) {
             const id = Date.now() + (Math.random() * 1000000).toFixed(0)
+            // Drop empty candidates (e.g. the trailing empty option in `{a|}`) so no
+            // blank option row is rendered. Mirrors _cleanupGroupEmpties, applied at
+            // creation time. (bugfix B2 / spec §10)
+            const options = parsed.options
+                .map(opt => ({
+                    weightMeta: opt.weightMeta,
+                    leaves: opt.leaves.map(leafStr => this._createLeafTag(leafStr))
+                }))
+                .filter(opt => opt.leaves.length > 0)
+            if (options.length === 0) return null
             const tag = {
                 id,
                 value: '',
@@ -1762,10 +1788,7 @@ export default {
                 isVariantGroup: true,
                 disabled: false,
                 groupMeta: JSON.parse(JSON.stringify(parsed.groupMeta)),
-                options: parsed.options.map(opt => ({
-                    weightMeta: opt.weightMeta,
-                    leaves: opt.leaves.map(leafStr => this._createLeafTag(leafStr))
-                }))
+                options
             }
             tag.value = serializeGroup(tag, ',' + (this.autoRemoveSpace ? '' : ' '))
             if (index >= 0) {
@@ -2004,96 +2027,3 @@ export default {
     },
 }
 </script>
-
-<style>
-.prompt-variant-group {
-    border: 1px solid var(--physton-common-blue, #597ef7);
-    border-radius: 6px;
-    background: rgba(89, 126, 247, 0.04);
-    padding: 6px 8px;
-    margin-bottom: 2px;
-}
-.prompt-variant-group.disabled {
-    opacity: 0.5;
-}
-.variant-group-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-    font-size: 0.8rem;
-}
-.variant-braces-text {
-    font-weight: bold;
-    color: var(--physton-common-blue, #597ef7);
-    font-size: 0.9rem;
-}
-.variant-meta {
-    background: rgba(89, 126, 247, 0.12);
-    color: var(--physton-common-blue, #597ef7);
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 0.75rem;
-    font-family: monospace;
-}
-.variant-btn {
-    background: transparent;
-    border: 1px solid rgba(128, 128, 128, 0.3);
-    border-radius: 3px;
-    padding: 2px 6px;
-    font-size: 0.7rem;
-    cursor: pointer;
-    color: inherit;
-}
-.variant-btn:hover {
-    background: rgba(128, 128, 128, 0.15);
-}
-.variant-options {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.variant-option-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 2px 0;
-}
-.option-weight {
-    font-size: 0.75rem;
-    color: var(--physton-common-red, #ff4d4f);
-    font-family: monospace;
-    white-space: nowrap;
-}
-.leaf-tag {
-    display: inline-flex;
-    align-items: center;
-    margin-bottom: 2px !important;
-    margin-right: 4px !important;
-}
-.leaf-tag-value {
-    font-size: 0.8rem !important;
-}
-.leaf-extend {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex-wrap: wrap;
-}
-.leaf-extend .input-number {
-    width: 50px;
-}
-.leaf-extend button {
-    background: transparent;
-    border: 1px solid rgba(128, 128, 128, 0.3);
-    border-radius: 2px;
-    padding: 1px 4px;
-    cursor: pointer;
-    font-size: 0.65rem;
-    line-height: 1;
-}
-.leaf-extend button:hover {
-    background: rgba(128, 128, 128, 0.15);
-}
-</style>

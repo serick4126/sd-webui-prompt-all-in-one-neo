@@ -5335,3 +5335,182 @@
         .icon-svg { width: 12px; height: 12px; }
     }
 }
+
+// Dynamic Prompts variant group splitting UI.
+// Migrated out of the phystonPrompt.vue inline <style> into the LESS pipeline so
+// the rules live alongside the rest of the prompt-tag styling and use the brand
+// LESS color variables (@common-blue / @common-red). Also fixes:
+//   - bug #2  : keep `(token:1.1)` on one line (leaf value laid out horizontally)
+//   - bug #1b : per-option `|` marker with hanging indent for wrapped leaves
+//   - bug #3a/#3b : leaf weight bar floats above the leaf as a popover instead of
+//                   being inserted in flow (no overlap, no group resize)
+.physton-prompt .prompt-tags .prompt-tags-list .prompt-tag {
+    .prompt-variant-group {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid @common-blue;
+        border-radius: 6px;
+        background: rgba(74, 84, 255, 0.05);
+        padding: 6px 8px;
+        margin-bottom: 2px;
+        overflow: visible;
+
+        &.disabled {
+            opacity: 0.5;
+        }
+
+        .variant-group-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+
+            .variant-braces-text {
+                font-weight: bold;
+                color: @common-blue;
+                font-size: 0.9rem;
+            }
+
+            .variant-meta {
+                background: rgba(74, 84, 255, 0.12);
+                color: @common-blue;
+                padding: 1px 5px;
+                border-radius: 3px;
+                font-size: 0.75rem;
+                font-family: monospace;
+            }
+
+            .variant-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: transparent;
+                border: 1px solid rgba(128, 128, 128, 0.3);
+                border-radius: 3px;
+                padding: 2px 5px;
+                cursor: pointer;
+                color: inherit;
+
+                &:hover {
+                    background: rgba(128, 128, 128, 0.15);
+                }
+
+                .icon-svg,
+                .icon-svg svg {
+                    width: 12px;
+                    height: 12px;
+                }
+
+                .icon-svg svg {
+                    fill: currentColor;
+                }
+            }
+        }
+
+        .variant-options {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            overflow: visible;
+
+            .variant-option-row {
+                position: relative;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 4px;
+                // leave room on the left for the absolutely-positioned `|` marker so
+                // wrapped leaves hang-indent under the first leaf, not under the marker
+                padding: 2px 0 2px 14px;
+                overflow: visible;
+
+                .variant-option-marker {
+                    position: absolute;
+                    left: 2px;
+                    top: 6px;
+                    color: @common-blue;
+                    font-weight: bold;
+                    opacity: 0.55;
+                    font-family: monospace;
+                    user-select: none;
+                    pointer-events: none;
+                }
+
+                .option-weight {
+                    font-size: 0.75rem;
+                    color: @common-red;
+                    font-family: monospace;
+                    white-space: nowrap;
+                }
+
+                .leaf-tag {
+                    position: relative; // anchor for the floating weight bar
+                    display: inline-flex;
+                    align-items: center;
+                    overflow: visible;
+                    margin-bottom: 2px !important;
+                    margin-right: 4px !important;
+
+                    .leaf-tag-value {
+                        // lay the `(` `token` `)` character <div>s out horizontally so
+                        // a weighted leaf renders as one chip on one line (bug #2)
+                        display: flex;
+                        align-items: center;
+                        font-size: 0.8rem !important;
+
+                        .weight-character {
+                            color: @common-red;
+                        }
+                    }
+
+                    // Weight adjust bar: float above the leaf like the normal tag's
+                    // .btn-tag-extend (whose positioning is scoped under .prompt-tag-main
+                    // and therefore never reached the leaf). Absolute so showing/hiding it
+                    // no longer reflows the group box. (bug #3a / #3b)
+                    .leaf-extend {
+                        display: flex;
+                        align-items: center;
+                        gap: 2px;
+                        flex-wrap: nowrap;
+                        white-space: nowrap;
+                        position: absolute;
+                        top: -32px;
+                        left: 0;
+                        z-index: 100;
+                        padding: 2px 4px;
+                        border-radius: 4px;
+                        box-shadow: 0 0 3px 0 @common-blue;
+                        .common-colourful-background();
+
+                        .input-number {
+                            width: 50px;
+                        }
+
+                        button {
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: transparent;
+                            border: none;
+                            border-radius: 2px;
+                            padding: 1px 3px;
+                            cursor: pointer;
+                            line-height: 1;
+
+                            &:hover {
+                                background: rgba(255, 255, 255, 0.2);
+                            }
+
+                            .icon-svg,
+                            .icon-svg svg {
+                                width: 16px;
+                                height: 16px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
