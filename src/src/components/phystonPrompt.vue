@@ -1257,6 +1257,7 @@ export default {
             }
         },
         updateTags() {
+            this._syncGroupValues()
             console.log('tags change', this.tags)
             this.updatePrompt()
             const steps = this.steps.querySelector('input[type="number"]').value
@@ -1803,6 +1804,18 @@ export default {
                 if (idx >= 0) this.tags.splice(idx, 1)
             }
         },
+        // Keep each group tag's serialized `value` in sync with its current leaves,
+        // so the reuse-matching in _onTextareaChange (item.value === token) still
+        // matches after leaf edits and the group is not rebuilt (losing leaf ids /
+        // localValue / disabled) on the next textarea round-trip.
+        _syncGroupValues() {
+            const leafSep = ',' + (this.autoRemoveSpace ? '' : ' ')
+            for (const tag of this.tags) {
+                if (tag.isVariantGroup) {
+                    tag.value = serializeGroup(tag, leafSep)
+                }
+            }
+        },
         onLeafWeightNumChange(groupId, optIdx, leafId, e) {
             const leaf = this._findLeaf(groupId, optIdx, leafId)
             if (!leaf) return
@@ -1915,22 +1928,6 @@ export default {
             }
             this._cleanupGroupEmpties(groupId)
             this.updateTags()
-        },
-        onLeafTranslateToLocalClick(groupId, optIdx, leafId) {
-            const leaf = this._findLeaf(groupId, optIdx, leafId)
-            if (!leaf) return
-            if (this.loading[leaf.id + '_local']) return
-            this.translates([{id: leaf.id, value: leaf.value}], true, true).finally(() => {
-                this.updateTags()
-            })
-        },
-        onLeafTranslateToEnglishClick(groupId, optIdx, leafId) {
-            const leaf = this._findLeaf(groupId, optIdx, leafId)
-            if (!leaf) return
-            if (this.loading[leaf.id + '_en']) return
-            this.translates([{id: leaf.id, value: leaf.value}], false, true).finally(() => {
-                this.updateTags()
-            })
         },
         onGroupEditClick(groupId) {
             this.editing = {}
