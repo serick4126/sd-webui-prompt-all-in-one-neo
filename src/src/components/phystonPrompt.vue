@@ -848,6 +848,17 @@ export default {
             this.init()
         })
     },
+    beforeUnmount() {
+        if (this.textarea) {
+            this.textarea.removeEventListener('input', this._onRealtimeInput)
+            this.textarea.removeEventListener('compositionstart', this._onCompositionStart)
+            this.textarea.removeEventListener('compositionend', this._onCompositionEnd)
+            this.textarea.removeEventListener('focus', this._onCaretMove)
+            this.textarea.removeEventListener('mouseup', this._onCaretMove)
+            this.textarea.removeEventListener('keyup', this._onTextareaKeyup)
+            this.textarea.removeEventListener('blur', this._onTextareaBlur)
+        }
+    },
     methods: {
         init() {
             this.tags = []
