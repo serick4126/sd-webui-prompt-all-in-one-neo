@@ -23,8 +23,9 @@
                             :visual-break-separator="visualBreakSeparator"
                             v-model:auto-remove-lora-before-comma="autoRemoveLoraBeforeComma"
                             v-model:auto-remove-lora-after-comma="autoRemoveLoraAfterComma"
-                            v-model:use-novel-ai-weight-symbol="useNovelAiWeightSymbol"
-                            v-model:auto-remove-before-line-comma="autoRemoveBeforeLineComma"
+                        v-model:use-novel-ai-weight-symbol="useNovelAiWeightSymbol"
+                        v-model:enable-variant-group-split="enableVariantGroupSplit"
+                        v-model:auto-remove-before-line-comma="autoRemoveBeforeLineComma"
                             :hide-default-input="item.hideDefaultInput"
                             @update:hide-default-input="onUpdateHideDefaultInput(item.id, $event)"
                             :auto-load-webui-prompt="item.autoLoadWebuiPrompt"
@@ -97,8 +98,9 @@
                        v-model:visual-break-separator="visualBreakSeparator"
                        v-model:auto-remove-lora-before-comma="autoRemoveLoraBeforeComma"
                        v-model:auto-remove-lora-after-comma="autoRemoveLoraAfterComma"
-                       v-model:use-novel-ai-weight-symbol="useNovelAiWeightSymbol"
-                       v-model:auto-remove-before-line-comma="autoRemoveBeforeLineComma"
+                     v-model:use-novel-ai-weight-symbol="useNovelAiWeightSymbol"
+                     v-model:enable-variant-group-split="enableVariantGroupSplit"
+                     v-model:auto-remove-before-line-comma="autoRemoveBeforeLineComma"
         ></prompt-format>
         <blacklist ref="blacklist" v-model:language-code="languageCode"
                    :translate-apis="translateApis"
@@ -319,6 +321,7 @@ export default {
             autoRemoveLoraBeforeComma: false,
             autoRemoveLoraAfterComma: false,
             useNovelAiWeightSymbol: false,
+        enableVariantGroupSplit: true,
             autoRemoveBeforeLineComma: false,
             // hideDefaultInput: false,
             enableTooltip: true,
@@ -528,16 +531,25 @@ export default {
             },
             immediate: false,
         },
-        useNovelAiWeightSymbol: {
-            handler: function (val, oldVal) {
-                if (!this.startWatchSave) return
-                console.log('onUseNovelAiWeightSymbolChange', val)
-                this.gradioAPI.setData('useNovelAiWeightSymbol', val).then(data => {
-                }).catch(err => {
-                })
-            },
-            immediate: false,
+    useNovelAiWeightSymbol: {
+        handler: function (val, oldVal) {
+            if (!this.startWatchSave) return
+            console.log('onUseNovelAiWeightSymbolChange', val)
+            this.gradioAPI.setData('useNovelAiWeightSymbol', val).then(data => {
+            }).catch(err => {
+            })
         },
+        immediate: false,
+    },
+    enableVariantGroupSplit: {
+        handler: function (val, oldVal) {
+            if (!this.startWatchSave) return
+            this.gradioAPI.setData('enableVariantGroupSplit', val).then(data => {
+            }).catch(err => {
+            })
+        },
+        immediate: false,
+    },
         autoRemoveBeforeLineComma: {
             handler: function (val, oldVal) {
                 if (!this.startWatchSave) return
@@ -705,7 +717,7 @@ export default {
         },
         init() {
             this.loadExtraNetworks()
-            let dataListsKeys = ['languageCode', 'autoTranslate', 'autoTranslateToEnglish', 'autoTranslateToLocal', 'autoRemoveSpace', 'autoRemoveLastComma', 'autoKeepWeightZero', 'autoKeepWeightOne', 'autoBreakBeforeWrap', 'autoBreakAfterWrap', 'visualBreakSeparator', 'autoRemoveLoraBeforeComma', 'autoRemoveLoraAfterComma', 'useNovelAiWeightSymbol', 'autoRemoveBeforeLineComma', /*'hideDefaultInput', */'translateApi', 'enableTooltip', 'tagCompleteFile', 'onlyCsvOnAuto', 'extensionSelect.minimalist', 'groupTagsColor', 'groupTagsTranslate', 'blacklist', 'cancelBlacklistConfirm', 'hotkey', 'extraNetworksWidth', 'extraNetworksHeight']
+            let dataListsKeys = ['languageCode', 'autoTranslate', 'autoTranslateToEnglish', 'autoTranslateToLocal', 'autoRemoveSpace', 'autoRemoveLastComma', 'autoKeepWeightZero', 'autoKeepWeightOne', 'autoBreakBeforeWrap', 'autoBreakAfterWrap', 'visualBreakSeparator', 'autoRemoveLoraBeforeComma', 'autoRemoveLoraAfterComma', 'useNovelAiWeightSymbol', 'enableVariantGroupSplit', 'autoRemoveBeforeLineComma', /*'hideDefaultInput', */'translateApi', 'enableTooltip', 'tagCompleteFile', 'onlyCsvOnAuto', 'extensionSelect.minimalist', 'groupTagsColor', 'groupTagsTranslate', 'blacklist', 'cancelBlacklistConfirm', 'hotkey', 'extraNetworksWidth', 'extraNetworksHeight']
             this.prompts.forEach(item => {
                 dataListsKeys.push(item.hideDefaultInputKey)
                 dataListsKeys.push(item.autoLoadWebuiPromptKey)
@@ -791,9 +803,12 @@ export default {
                 if (data.autoRemoveLoraAfterComma !== null) {
                     this.autoRemoveLoraAfterComma = data.autoRemoveLoraAfterComma
                 }
-                if (data.useNovelAiWeightSymbol !== null) {
-                    this.useNovelAiWeightSymbol = data.useNovelAiWeightSymbol
-                }
+            if (data.useNovelAiWeightSymbol !== null) {
+                this.useNovelAiWeightSymbol = data.useNovelAiWeightSymbol
+            }
+            if (data.enableVariantGroupSplit !== null) {
+                this.enableVariantGroupSplit = data.enableVariantGroupSplit
+            }
                 if (data.autoRemoveBeforeLineComma !== null) {
                     this.autoRemoveBeforeLineComma = data.autoRemoveBeforeLineComma
                 }

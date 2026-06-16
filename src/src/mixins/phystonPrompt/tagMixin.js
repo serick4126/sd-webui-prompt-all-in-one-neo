@@ -15,6 +15,9 @@ export default {
     },
     methods: {
         _setTag(tag) {
+            if (typeof tag['type'] === 'string' && tag.type === 'variantGroup') {
+                return
+            }
             if (typeof tag['type'] === 'string' && tag.type === 'wrap') {
                 tag.weightNum = 1
                 tag.incWeight = 0
