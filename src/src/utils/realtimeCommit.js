@@ -26,3 +26,20 @@ export function activeSegment(value, caret) {
     }
     return ranges[ranges.length - 1]
 }
+
+export function computeStableValue(value, caret, prevState) {
+    const seg = activeSegment(value, caret)
+    const prefix = value.slice(0, seg.start)
+    const suffix = value.slice(seg.end)
+    const live = value.slice(seg.start, seg.end)
+
+    let frozen
+    if (prevState && prevState.prefix === prefix && prevState.suffix === suffix) {
+        frozen = prevState.frozen
+    } else {
+        frozen = live
+    }
+
+    const stableValue = prefix + frozen + suffix
+    return { stableValue, state: { prefix, suffix, frozen } }
+}
