@@ -5468,45 +5468,70 @@
                     // .btn-tag-extend (whose positioning is scoped under .prompt-tag-main
                     // and therefore never reached the leaf). Absolute so showing/hiding it
                     // no longer reflows the group box. (bug #3a / #3b)
+                    // Mirror the original .btn-tag-extend layout exactly so the
+                    // weight number and the adjust buttons are separated rather
+                    // than overlapping (matches the stock extension). The stock
+                    // positioning rule lives under .prompt-tag-main and never
+                    // reached the leaf, so it is replicated here verbatim.
                     .leaf-extend {
                         display: flex;
+                        justify-content: flex-start;
                         align-items: center;
-                        gap: 2px;
                         flex-wrap: nowrap;
                         white-space: nowrap;
                         position: absolute;
                         top: -32px;
                         left: 0;
                         z-index: 100;
-                        padding: 2px 4px;
+                        padding: 0;
                         border-radius: 4px;
+                        overflow: hidden;
                         box-shadow: 0 0 3px 0 @common-blue;
                         .common-colourful-background();
 
-                        .input-number {
-                            width: 50px;
-                        }
-
-                        button {
-                            display: inline-flex;
-                            align-items: center;
-                            justify-content: center;
+                        > button {
+                            height: 32px;
+                            width: 32px;
+                            border: 0;
+                            border-radius: 0;
+                            padding: 5px;
+                            min-width: auto;
+                            min-height: auto;
+                            font-size: 0.9rem;
                             background: transparent;
-                            border: none;
-                            border-radius: 2px;
-                            padding: 1px 3px;
+                            color: #fff;
+                            border-right: 1px solid rgba(255, 255, 255, 0.2);
                             cursor: pointer;
-                            line-height: 1;
+
+                            &:last-child {
+                                border-right: 0;
+                            }
 
                             &:hover {
                                 background: rgba(255, 255, 255, 0.2);
                             }
+                        }
 
-                            .icon-svg,
-                            .icon-svg svg {
-                                width: 16px;
-                                height: 16px;
+                        .input-number {
+                            width: 90px;
+                            border: 0;
+                            padding: 0;
+
+                            .vue-number-input__button {
+                                width: 1.5rem;
+                                background: rgba(255, 255, 255, .9);
                             }
+
+                            .vue-number-input__input {
+                                height: 32px;
+                                border: 0;
+                                padding: 0 26px;
+                            }
+                        }
+
+                        input[type=number]::-webkit-inner-spin-button,
+                        input[type=number]::-webkit-outer-spin-button {
+                            opacity: 1;
                         }
                     }
                 }
