@@ -296,6 +296,98 @@
                     <div v-for="(tag, index) in tags" :key="tag.id"
                          :class="['prompt-tag', tag.disabled ? 'disabled': '', tag.type === 'wrap' ? 'wrap-tag' : '', tag.isKeyword ? 'keyword-tag' : '']"
                          :ref="'promptTag-' + tag.id" :data-id="tag.id">
+                        <template v-if="tag.isVariantGroup">
+                            <div class="prompt-variant-group" :class="{ disabled: tag.disabled }">
+                                <div class="variant-group-header">
+                                    <span class="variant-braces-text">{ }</span>
+                                    <span v-if="tag.groupMeta.sigil" class="variant-meta">{{ tag.groupMeta.sigil }}</span>
+                                    <span v-if="tag.groupMeta.count" class="variant-meta">{{ tag.groupMeta.count }}$$</span>
+                                    <span v-if="tag.groupMeta.customSep" class="variant-meta">"{{ tag.groupMeta.customSep }}"</span>
+                                    <button type="button" class="variant-btn"
+                                            v-tooltip="getLang('variant_group_edit')"
+                                            @click="onGroupEditClick(tag.id)"
+                                            @mousedown.stop="" @mousemove.stop="" @mouseup.stop="">
+                                        <icon-svg name="edit"/>
+                                    </button>
+                                    <button type="button" class="variant-btn"
+                                            v-tooltip="getLang(tag.disabled ? 'variant_group_enable' : 'variant_group_disable')"
+                                            @click="onDisabledTagClick(tag.id)"
+                                            @mousedown.stop="" @mousemove.stop="" @mouseup.stop="">
+                                        <icon-svg :name="tag.disabled ? 'enable' : 'disabled'"/>
+                                    </button>
+                                    <button type="button" class="variant-btn"
+                                            v-tooltip="getLang('variant_group_delete')"
+                                            @click="onDeleteTagClick(tag.id)"
+                                            @mousedown.stop="" @mousemove.stop="" @mouseup.stop="">
+                                        <icon-svg name="close"/>
+                                    </button>
+                                </div>
+                                <textarea v-if="editing[tag.id]" class="scroll-hide svelte-4xt1ch input-tag-edit"
+                                          :value="groupRawText(tag)"
+                                          @mousedown.stop="" @mousemove.stop="" @mouseup.stop=""
+                                          @blur="onGroupEditBlur(tag.id, $event)"
+                                          @keydown="onGroupEditKeyDown(tag.id, $event)"></textarea>
+                                <div v-else class="variant-options">
+                                    <div v-for="(opt, oi) in tag.options" :key="oi" class="variant-option-row">
+                                        <span class="variant-option-marker">|</span>
+                                        <span v-if="opt.weightMeta" class="option-weight">{{ opt.weightMeta }}::</span>
+                                        <div v-for="leaf in opt.leaves" :key="leaf.id" class="prompt-tag leaf-tag"
+                                             @mouseenter="showLeafExtendId = leaf.id"
+                                             @mouseleave="showLeafExtendId = ''">
+                                            <div v-show="!leafEditing[leaf.id]"
+                                                 :class="leaf.classes || ['prompt-tag-value', 'leaf-tag-value']"
+                                                 v-html="renderLeafTag(leaf)"
+                                                 @dblclick="leafEditing = {}; leafEditing[leaf.id] = true; $forceUpdate()">
+                                            </div>
+                                            <textarea v-show="leafEditing[leaf.id]"
+                                                      class="scroll-hide svelte-4xt1ch input-tag-edit"
+                                                      :value="leaf.value"
+                                                      @mousedown.stop="" @mousemove.stop="" @mouseup.stop=""
+                                                      @blur="onLeafEditBlur(tag.id, oi, leaf.id)"
+                                                      @keydown="onLeafEditKeyDown(tag.id, oi, leaf.id, $event)"
+                                                      @change="leaf.value = $event.target.value"></textarea>
+                                            <div class="btn-tag-extend leaf-extend"
+                                                 v-show="showLeafExtendId === leaf.id && !leafEditing[leaf.id]"
+                                                 @click.stop="" @mousedown.stop="" @mousemove.stop="" @mouseup.stop="">
+                                                <vue-number-input class="input-number" name="input-number"
+                                                                  :model-value="leaf.weightNum" center controls
+                                                                  :min="-100" :step="0.1" size="small"
+                                                                  @update:model-value="onLeafWeightNumChange(tag.id, oi, leaf.id, $event)">
+                                                </vue-number-input>
+                                                <button type="button"
+                                                        @click="onLeafIncWeightClick(tag.id, oi, leaf.id, +1)">
+                                                    <icon-svg :name="useNovelAiWeightSymbol ? 'weight-braces-inc' : 'weight-parentheses-inc'"/>
+                                                </button>
+                                                <button type="button"
+                                                        @click="onLeafIncWeightClick(tag.id, oi, leaf.id, -1)">
+                                                    <icon-svg :name="useNovelAiWeightSymbol ? 'weight-braces-dec' : 'weight-parentheses-dec'"/>
+                                                </button>
+                                                <button type="button"
+                                                        @click="onLeafDecWeightClick(tag.id, oi, leaf.id, +1)">
+                                                    <icon-svg name="weight-brackets-inc"/>
+                                                </button>
+                                                <button type="button"
+                                                        @click="onLeafDecWeightClick(tag.id, oi, leaf.id, -1)">
+                                                    <icon-svg name="weight-brackets-dec"/>
+                                                </button>
+                                                <button type="button"
+                                                        @click="copy(leaf.value)">
+                                                    <icon-svg name="copy"/>
+                                                </button>
+                                                <button type="button"
+                                                        @click="onLeafDeleteClick(tag.id, oi, leaf.id)">
+                                                    <icon-svg name="close"/>
+                                                </button>
+                                            </div>
+                                            <div class="prompt-local-language" v-show="!isEnglish && leaf.localValue">
+                                                <div class="local-language">{{ leaf.localValue }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-else>
                         <div class="prompt-tag-main"
                              @mouseenter="onTagMouseEnter(tag.id)"
                              @mousemove.stop="onTagMouseMove(tag.id)"
@@ -421,6 +513,7 @@
                             </div>
                             <div class="local-language">{{ tag.localValue }}</div>
                         </div>
+                        </template>
                     </div>
                     <div v-for="(tag, index) in tags" :key="tag.id"
                          :class="['prompt-wrap', tag.type === 'wrap' ? 'wrap-tag' : '']" :data-id="tag.id"
@@ -574,6 +667,7 @@
 import Sortable from "sortablejs"
 
 import common from "@/utils/common"
+import { parseVariantGroup, serializeGroup } from "@/utils/parseVariantGroup"
 
 import LanguageMixin from "@/mixins/languageMixin"
 import VueNumberInput from '@/components/vue-number-input.vue'
@@ -667,6 +761,10 @@ export default {
         useNovelAiWeightSymbol: {
             type: Boolean,
             default: false,
+        },
+        enableVariantGroupSplit: {
+            type: Boolean,
+            default: true,
         },
         autoRemoveBeforeLineComma: {
             type: Boolean,
@@ -780,6 +878,8 @@ export default {
             droping: false,
             loading: {},
             editing: {},
+            leafEditing: {},
+            showLeafExtendId: '',
             isEditing: false,
         }
     },
@@ -947,6 +1047,34 @@ export default {
                 let tag = tags[index]
                 if (tag === "\n") {
                     this._appendTag("\n", "\n", false, -1, 'wrap')
+                } else if (this.enableVariantGroupSplit) {
+                    const parsed = parseVariantGroup(tag)
+                    if (parsed) {
+                        let find = false
+                        for (let item of oldTags) {
+                            if (item.isVariantGroup && item.value === tag) {
+                                find = item
+                                break
+                            }
+                        }
+                        if (find) {
+                            this.tags.push(find)
+                        } else {
+                            this._appendGroupTag(parsed, -1)
+                        }
+                    } else {
+                        let find = false
+                        for (let item of oldTags) {
+                            if (item.value === tag) {
+                                find = item
+                                break
+                            }
+                        }
+                        const localValue = find ? find.localValue : ''
+                        const disabled = find ? find.disabled : false
+                        const index = this._appendTag(tag, localValue, disabled, -1, 'text')
+                        if (!find && index !== -1) indexes.push(index)
+                    }
                 } else {
                     let find = false
                     for (let item of oldTags) {
@@ -1060,6 +1188,40 @@ export default {
                 let prompt = ''
                 if (typeof tag['type'] === 'string' && tag.type === 'wrap') {
                     prompt = "\n"
+                } else if (tag.isVariantGroup) {
+                    const leafSep = ',' + (this.autoRemoveSpace ? '' : ' ')
+                    let value = serializeGroup(tag, leafSep)
+
+                    let splitSymbol = ',' + (this.autoRemoveSpace ? '' : ' ')
+                    let nextTag = null
+                    let nextIsWarp = false
+                    let nextIsBreak = false
+                    if (index + 1 < length) {
+                        nextTag = tags2[index + 1]
+                        if (typeof nextTag['type'] === 'string' && nextTag.type === 'wrap') {
+                            nextIsWarp = true
+                        } else if (nextTag.value === 'BREAK') {
+                            nextIsBreak = true
+                        }
+                    }
+                    if (nextIsWarp) {
+                        if (this.autoRemoveBeforeLineComma) {
+                            splitSymbol = ''
+                        } else {
+                            const regionals = [' BREAK', ' ADDCOL', ' ADDROW', ' ADDCOMM', ' ADDBASE']
+                            for (const regional of regionals) {
+                                if (tag.value && tag.value.endsWith(regional)) {
+                                    splitSymbol = ''
+                                }
+                            }
+                        }
+                    } else if (nextIsBreak) {
+                        splitSymbol = ' '
+                    }
+                    if (this.autoRemoveLastComma && index + 1 === length) {
+                        splitSymbol = ''
+                    }
+                    prompt = value + splitSymbol
                 } else {
                     let value = common.replaceTag(tag.value)
                     if (value !== tag.value) {
@@ -1200,6 +1362,7 @@ export default {
             }
         },
         updateTags() {
+            this._syncGroupValues()
             console.log('tags change', this.tags)
             this.updatePrompt()
             const steps = this.steps.querySelector('input[type="number"]').value
@@ -1353,7 +1516,29 @@ export default {
         useHistory(history) {
             this.tags = []
             history.tags.forEach(item => {
-                this._appendTag(item.value, item.localValue, item.disabled, -1, item.type || 'text')
+                if (item.type === 'wrap') {
+                    this._appendTag("\n", "\n", false, -1, 'wrap')
+                    return
+                }
+                // Re-parse {a|b|c} tokens into variant groups on restore, exactly
+                // like _onTextareaChange. History (the original extension's own
+                // storage) is loaded on startup via _appendTag, which does not run
+                // the variant parser, so groups would otherwise render as plain
+                // text until the prompt is edited. (bugfix: initial-load split)
+                if (this.enableVariantGroupSplit) {
+                    const parsed = parseVariantGroup(item.value)
+                    if (parsed) {
+                        const tag = this._appendGroupTag(parsed, -1)
+                        if (tag) {
+                            if (item.disabled) tag.disabled = true
+                            return
+                        }
+                    }
+                }
+                // A group stored by an older session keeps type 'variantGroup'; if
+                // splitting is off (or it no longer parses) restore it as plain text.
+                const type = item.type === 'variantGroup' ? 'text' : (item.type || 'text')
+                this._appendTag(item.value, item.localValue, item.disabled, -1, type)
             })
             this.updateTags()
         },
@@ -1381,6 +1566,16 @@ export default {
             let tags = common.splitTags(prompt, this.autoBreakBeforeWrap, this.autoBreakAfterWrap)
             this.tags = []
             tags.forEach(tag => {
+                if (tag === "\n") {
+                    this._appendTag("\n", "\n", false, -1, 'wrap')
+                    return
+                }
+                // Mirror _onTextareaChange so {a|b|c} from a generated prompt is
+                // split into a variant group rather than a plain text tag. (bugfix)
+                if (this.enableVariantGroupSplit) {
+                    const parsed = parseVariantGroup(tag)
+                    if (parsed && this._appendGroupTag(parsed, -1)) return
+                }
                 this._appendTag(tag, '', false, -1, 'text')
             })
             this.updateTags()
@@ -1693,7 +1888,268 @@ export default {
                     }
                 }
             })
-        }
+        },
+        _appendGroupTag(parsed, index = -1) {
+            const id = Date.now() + (Math.random() * 1000000).toFixed(0)
+            // Drop empty candidates (e.g. the trailing empty option in `{a|}`) so no
+            // blank option row is rendered. Mirrors _cleanupGroupEmpties, applied at
+            // creation time. (bugfix B2 / spec §10)
+            const options = parsed.options
+                .map(opt => ({
+                    weightMeta: opt.weightMeta,
+                    leaves: opt.leaves.map(leafStr => this._createLeafTag(leafStr))
+                }))
+                .filter(opt => opt.leaves.length > 0)
+            if (options.length === 0) return null
+            const tag = {
+                id,
+                value: '',
+                localValue: '',
+                type: 'variantGroup',
+                isVariantGroup: true,
+                disabled: false,
+                groupMeta: JSON.parse(JSON.stringify(parsed.groupMeta)),
+                options
+            }
+            tag.value = serializeGroup(tag, ',' + (this.autoRemoveSpace ? '' : ' '))
+            if (index >= 0) {
+                this.tags.splice(index, 0, tag)
+            } else {
+                this.tags.push(tag)
+            }
+            return tag
+        },
+        _createLeafTag(value, localValue = '') {
+            const id = Date.now() + (Math.random() * 1000000).toFixed(0)
+            let tag = {
+                id,
+                value: value || '',
+                localValue: localValue || '',
+                disabled: false,
+                type: 'leaf'
+            }
+            this._setTag(tag)
+            return tag
+        },
+        _findGroupTag(groupId) {
+            return this.tags.find(t => t.id === groupId)
+        },
+        _findLeaf(groupId, optIdx, leafId) {
+            const group = this._findGroupTag(groupId)
+            if (!group || !group.options[optIdx]) return null
+            return group.options[optIdx].leaves.find(l => l.id === leafId) || null
+        },
+        _cleanupGroupEmpties(groupId) {
+            const group = this._findGroupTag(groupId)
+            if (!group) return
+            group.options = group.options.filter(opt => opt.leaves.length > 0)
+            if (group.options.length === 0) {
+                const idx = this.tags.indexOf(group)
+                if (idx >= 0) this.tags.splice(idx, 1)
+            }
+        },
+        // Keep each group tag's serialized `value` in sync with its current leaves,
+        // so the reuse-matching in _onTextareaChange (item.value === token) still
+        // matches after leaf edits and the group is not rebuilt (losing leaf ids /
+        // localValue / disabled) on the next textarea round-trip.
+        _syncGroupValues() {
+            const leafSep = ',' + (this.autoRemoveSpace ? '' : ' ')
+            for (const tag of this.tags) {
+                if (tag.isVariantGroup) {
+                    tag.value = serializeGroup(tag, leafSep)
+                }
+            }
+        },
+        onLeafWeightNumChange(groupId, optIdx, leafId, e) {
+            const leaf = this._findLeaf(groupId, optIdx, leafId)
+            if (!leaf) return
+            e = typeof e === "number" || typeof e === "string" ? e : e.target.value
+            if (leaf.weightNum == e) return
+            let weightNum = e
+            let value = leaf.value
+            if (weightNum !== 0) {
+                if (weightNum === 1 && !this.autoKeepWeightOne) {
+                    const bracket = common.hasBrackets(value)
+                    if (bracket[0] === '(' && bracket[1] === ')' || (this.useNovelAiWeightSymbol && bracket[0] === '{' && bracket[1] === '}')) {
+                        value = common.setLayers(value, 0, bracket[0], bracket[1])
+                    }
+                    value = value.replace(common.weightNumRegex, '$1')
+                } else {
+                    if (!common.weightNumRegex.test(value)) {
+                        let bracket = common.hasBrackets(value)
+                        if (bracket) {
+                            value = common.setLayers(value, 1, bracket[0], bracket[1], ':' + common.formatWeight(weightNum))
+                        } else {
+                            value = value + ':' + common.formatWeight(weightNum)
+                        }
+                    } else {
+                        // The leaf already carries a weight (e.g. (town:1.1)); replace
+                        // the existing number with the new one so spinning the input
+                        // actually updates the value (and thus the prompt). (bugfix)
+                        value = value.replace(common.weightNumRegex, '$1:' + common.formatWeight(weightNum))
+                    }
+                    if (!leaf.isLora && !leaf.isLyco && !leaf.isEmbedding && !common.hasBrackets(value)) {
+                        if (this.useNovelAiWeightSymbol) {
+                            value = common.setLayers(value, 1, '{', '}')
+                        } else {
+                            value = common.setLayers(value, 1, '(', ')')
+                        }
+                    }
+                }
+                if (value !== leaf.value) {
+                    leaf.value = value
+                    this._setTag(leaf)
+                }
+            } else {
+                if (this.autoKeepWeightZero) {
+                    leaf.value = value.replace(common.weightNumRegex, '$1:0')
+                } else {
+                    leaf.value = value.replace(common.weightNumRegex, '$1')
+                }
+            }
+            leaf.weightNum = weightNum
+            this.updateTags()
+        },
+        onLeafIncWeightClick(groupId, optIdx, leafId, num) {
+            const leaf = this._findLeaf(groupId, optIdx, leafId)
+            if (!leaf) return
+            let value = leaf.value
+            value = common.setLayers(value, 0, '[', ']')
+            if (this.useNovelAiWeightSymbol) {
+                value = common.setLayers(value, 0, '(', ')')
+            }
+            let incWeight = leaf.incWeight
+            incWeight += num
+            if (incWeight < 0) incWeight = 0
+            leaf.incWeight = incWeight
+            leaf.decWeight = 0
+            if (this.useNovelAiWeightSymbol) {
+                value = common.setLayers(value, incWeight, '{', '}')
+            } else {
+                value = common.setLayers(value, incWeight, '(', ')')
+            }
+            leaf.value = value
+            this.updateTags()
+        },
+        onLeafDecWeightClick(groupId, optIdx, leafId, num) {
+            const leaf = this._findLeaf(groupId, optIdx, leafId)
+            if (!leaf) return
+            let value = leaf.value
+            value = common.setLayers(value, 0, '(', ')')
+            if (this.useNovelAiWeightSymbol) {
+                value = common.setLayers(value, 0, '{', '}')
+            }
+            let decWeight = leaf.decWeight
+            decWeight += num
+            if (decWeight < 0) decWeight = 0
+            leaf.incWeight = 0
+            leaf.decWeight = decWeight
+            value = common.setLayers(value, decWeight, '[', ']')
+            leaf.value = value
+            this.updateTags()
+        },
+        onLeafEditKeyDown(groupId, optIdx, leafId, e) {
+            if (e.keyCode === 13) {
+                const leaf = this._findLeaf(groupId, optIdx, leafId)
+                if (!leaf) return
+                this.leafEditing = {}
+                this._changeLeafValue(groupId, optIdx, leaf)
+            }
+        },
+        onLeafEditBlur(groupId, optIdx, leafId) {
+            this.leafEditing = {}
+        },
+        _changeLeafValue(groupId, optIdx, leaf) {
+            leaf.value = leaf.value || ''
+            this._setTag(leaf)
+            this._cleanupGroupEmpties(groupId)
+            this.updateTags()
+        },
+        onLeafDeleteClick(groupId, optIdx, leafId) {
+            const group = this._findGroupTag(groupId)
+            if (!group) return
+            for (const opt of group.options) {
+                const idx = opt.leaves.findIndex(l => l.id === leafId)
+                if (idx >= 0) {
+                    opt.leaves.splice(idx, 1)
+                    break
+                }
+            }
+            this._cleanupGroupEmpties(groupId)
+            this.updateTags()
+        },
+        onGroupEditClick(groupId) {
+            this.editing = {}
+            this.editing[groupId] = true
+            this.isEditing = true
+            this.$forceUpdate()
+        },
+        onGroupEditBlur(groupId, e) {
+            const group = this._findGroupTag(groupId)
+            if (!group) return
+            this.editing[groupId] = false
+            this.isEditing = false
+            this._commitGroupEdit(groupId, e.target.value)
+        },
+        onGroupEditKeyDown(groupId, e) {
+            if (e.keyCode === 13) {
+                const group = this._findGroupTag(groupId)
+                if (!group) return
+                this.editing[groupId] = false
+                this.isEditing = false
+                this._commitGroupEdit(groupId, e.target.value)
+            }
+        },
+        _commitGroupEdit(groupId, rawText) {
+            this.tags = this.tags.filter(t => t.id !== groupId)
+            const tokens = common.splitTags(rawText, this.autoBreakBeforeWrap, this.autoBreakAfterWrap)
+            for (const tok of tokens) {
+                if (tok === '\n') {
+                    this._appendTag('\n', '\n', false, -1, 'wrap')
+                } else if (this.enableVariantGroupSplit) {
+                    const parsed = parseVariantGroup(tok)
+                    if (parsed) {
+                        this._appendGroupTag(parsed, -1)
+                    } else {
+                        this._appendTag(tok, '', false, -1, 'text')
+                    }
+                } else {
+                    this._appendTag(tok, '', false, -1, 'text')
+                }
+            }
+            this.updateTags()
+        },
+        groupRawText(tag) {
+            return serializeGroup(tag, ',' + (this.autoRemoveSpace ? '' : ' '))
+        },
+        renderLeafTag(leaf) {
+            let value = leaf.value
+            value = common.escapeHtml(value)
+            if (leaf.incWeight > 0) {
+                if (this.useNovelAiWeightSymbol) {
+                    value = common.setLayers(value, 0, '{', '}')
+                    value = '<div class="character">' + value + '</div>'
+                    let start = '<div class="weight-character">' + '{'.repeat(leaf.incWeight) + '</div>'
+                    let end = '<div class="weight-character">' + '}'.repeat(leaf.incWeight) + '</div>'
+                    value = start + value + end
+                } else {
+                    value = common.setLayers(value, 0, '(', ')')
+                    value = '<div class="character">' + value + '</div>'
+                    let start = '<div class="weight-character">' + '('.repeat(leaf.incWeight) + '</div>'
+                    let end = '<div class="weight-character">' + ')'.repeat(leaf.incWeight) + '</div>'
+                    value = start + value + end
+                }
+            } else if (leaf.decWeight > 0) {
+                value = common.setLayers(value, 0, '[', ']')
+                value = '<div class="character">' + value + '</div>'
+                let start = '<div class="weight-character">' + '['.repeat(leaf.decWeight) + '</div>'
+                let end = '<div class="weight-character">' + ']'.repeat(leaf.decWeight) + '</div>'
+                value = start + value + end
+            } else {
+                value = '<div class="character">' + value + '</div>'
+            }
+            return value
+        },
     },
 }
 </script>

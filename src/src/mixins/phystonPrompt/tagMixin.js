@@ -15,6 +15,10 @@ export default {
     },
     methods: {
         _setTag(tag) {
+            if (typeof tag['type'] === 'string' && tag.type === 'variantGroup') {
+                return
+            }
+            const isLeaf = typeof tag['type'] === 'string' && tag.type === 'leaf'
             if (typeof tag['type'] === 'string' && tag.type === 'wrap') {
                 tag.weightNum = 1
                 tag.incWeight = 0
@@ -39,6 +43,19 @@ export default {
                         tag.originalValue = value.replace(common.weightNumRegex, '$1')
                     }
                 }
+            }
+            if (isLeaf) {
+                // Leaves keep weight computation (handled above) but must NOT run
+                // LoRA/Lyco/Embedding/Keyword classification: a `<lora:foo:1>` etc.
+                // placed inside a `{}` variant group should stay a plain text leaf
+                // rather than being mistaken for a network tag. (bugfix B1 / spec §2.7)
+                tag.isLora = false
+                tag.loraExists = false
+                tag.isLyco = false
+                tag.lycoExists = false
+                tag.isEmbedding = false
+                tag.isKeyword = false
+                return
             }
             this._setTagClass(tag)
             this.$nextTick(() => {

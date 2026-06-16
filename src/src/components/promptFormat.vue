@@ -66,6 +66,12 @@
                            @change="$emit('update:autoRemoveBeforeLineComma', $event.target.checked)">
                     <div class="format-desc" v-html="getLang('is_remove_before_line_comma')"></div>
                 </div>
+                <div class="format-item">
+                    <input class="format-checkbox" type="checkbox"
+                           :checked="enableVariantGroupSplit"
+                           @change="$emit('update:enableVariantGroupSplit', $event.target.checked)">
+                    <div class="format-desc" v-html="getLang('is_split_variant_group')"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -120,17 +126,21 @@ export default {
             type: Boolean,
             default: false,
         },
-        autoRemoveBeforeLineComma: {
-            type: Boolean,
-            default: false,
-        },
+    autoRemoveBeforeLineComma: {
+        type: Boolean,
+        default: false,
+    },
+    enableVariantGroupSplit: {
+        type: Boolean,
+        default: true,
+    },
     },
     data() {
         return {
             isOpen: false,
         }
     },
-    emits: ['update:autoRemoveSpace', 'update:autoRemoveLastComma', 'update:autoKeepWeightZero', 'update:autoKeepWeightOne', 'update:autoBreakBeforeWrap', 'update:autoBreakAfterWrap', 'update:visualBreakSeparator', 'update:autoRemoveLoraBeforeComma', 'update:autoRemoveLoraAfterComma', 'update:useNovelAiWeightSymbol', 'update:autoRemoveBeforeLineComma'],
+    emits: ['update:autoRemoveSpace', 'update:autoRemoveLastComma', 'update:autoKeepWeightZero', 'update:autoKeepWeightOne', 'update:autoBreakBeforeWrap', 'update:autoBreakAfterWrap', 'update:visualBreakSeparator', 'update:autoRemoveLoraBeforeComma', 'update:autoRemoveLoraAfterComma', 'update:useNovelAiWeightSymbol', 'update:autoRemoveBeforeLineComma', 'update:enableVariantGroupSplit'],
     computed: {},
     mounted() {
     },
