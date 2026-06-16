@@ -1042,6 +1042,26 @@ export default {
 
             let indexes = []
             let oldTags = this.tags
+            // 再パースをまたいで確定済みタグの id を継続させ、Vue の :key を安定させる。
+            // 同値タグを二重に再利用しないよう、消費済みの旧タグを記録する。
+            const consumed = new Set()
+            // 確定済み(同値)タグは既存オブジェクト(=同一 id)を再利用し、無ければ新規生成する。
+            const reuseOrAppendText = (token) => {
+                let find = null
+                for (let item of oldTags) {
+                    if (!consumed.has(item) && !item.isVariantGroup && item.value === token) {
+                        find = item
+                        break
+                    }
+                }
+                if (find) {
+                    consumed.add(find)
+                    this.tags.push(find)
+                } else {
+                    const idx = this._appendTag(token, '', false, -1, 'text')
+                    if (idx !== -1) indexes.push(idx)
+                }
+            }
             this.tags = []
             for (let index in tags) {
                 let tag = tags[index]
@@ -1050,43 +1070,24 @@ export default {
                 } else if (this.enableVariantGroupSplit) {
                     const parsed = parseVariantGroup(tag)
                     if (parsed) {
-                        let find = false
+                        let find = null
                         for (let item of oldTags) {
-                            if (item.isVariantGroup && item.value === tag) {
+                            if (!consumed.has(item) && item.isVariantGroup && item.value === tag) {
                                 find = item
                                 break
                             }
                         }
                         if (find) {
+                            consumed.add(find)
                             this.tags.push(find)
                         } else {
                             this._appendGroupTag(parsed, -1)
                         }
                     } else {
-                        let find = false
-                        for (let item of oldTags) {
-                            if (item.value === tag) {
-                                find = item
-                                break
-                            }
-                        }
-                        const localValue = find ? find.localValue : ''
-                        const disabled = find ? find.disabled : false
-                        const index = this._appendTag(tag, localValue, disabled, -1, 'text')
-                        if (!find && index !== -1) indexes.push(index)
+                        reuseOrAppendText(tag)
                     }
                 } else {
-                    let find = false
-                    for (let item of oldTags) {
-                        if (item.value === tag) {
-                            find = item
-                            break
-                        }
-                    }
-                    const localValue = find ? find.localValue : ''
-                    const disabled = find ? find.disabled : false
-                    const idx = this._appendTag(tag, localValue, disabled, -1, 'text')
-                    if (!find && idx !== -1) indexes.push(idx)
+                    reuseOrAppendText(tag)
                 }
             }
             return indexes
