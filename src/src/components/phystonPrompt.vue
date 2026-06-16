@@ -996,6 +996,7 @@ export default {
             this._onRealtimeInput()
         },
         _onTextareaKeyup(e) {
+            if (this.isComposing) return
             const navKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']
             if (navKeys.includes(e.key)) this._onCaretMove()
         },
