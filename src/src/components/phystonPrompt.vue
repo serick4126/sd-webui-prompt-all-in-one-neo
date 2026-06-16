@@ -584,6 +584,7 @@ import GroupTagsMixin from "@/mixins/phystonPrompt/groupTagsMixin"
 import IconSvg from "@/components/iconSvg.vue"
 import HighlightPrompt from "@/components/highlightPrompt.vue"
 import {ColorPicker} from "vue3-colorpicker"
+import { computeStableValue } from "@/utils/realtimeCommit"
 
 export default {
     name: 'PhystonPrompt',
@@ -771,6 +772,10 @@ export default {
             counterText: '0/75',
             tags: [],
 
+            isComposing: false,
+            realtimeState: null,
+            _lastStableValue: null,
+
             sortable: null,
             droping: false,
             loading: {},
@@ -870,6 +875,13 @@ export default {
                 // this.textarea.addEventListener('change', this.onTextareaChange)
                 // this.textarea.removeEventListener('blur', this.onTextareaChange)
                 // this.textarea.addEventListener('blur', this.onTextareaChange)
+                this.textarea.addEventListener('input', this._onRealtimeInput)
+                this.textarea.addEventListener('compositionstart', this._onCompositionStart)
+                this.textarea.addEventListener('compositionend', this._onCompositionEnd)
+                this.textarea.addEventListener('focus', this._onCaretMove)
+                this.textarea.addEventListener('mouseup', this._onCaretMove)
+                this.textarea.addEventListener('keyup', this._onTextareaKeyup)
+                this.textarea.addEventListener('blur', this._onTextareaBlur)
             }, 300)
         },
         onTextareaChange(event) {
@@ -939,6 +951,68 @@ export default {
                 }
             }
             return indexes
+        },
+        _onRealtimeInput() {
+            if (this.isComposing) return
+            if (document.activeElement !== this.textarea) return
+            const autocompleteParent = this.textarea.parentElement.getElementsByClassName('autocompleteParent')
+            if (autocompleteParent.length) {
+                if (autocompleteParent[0].style.display !== 'none') return
+            } else {
+                const autocompleteResults = this.textarea.parentElement.getElementsByClassName('autocompleteResults')
+                if (autocompleteResults.length > 0) {
+                    if (autocompleteResults[0].style.display !== 'none') return
+                }
+            }
+
+            const value = this.textarea.value
+            const caret = this.textarea.selectionStart
+            const { stableValue, state } = computeStableValue(value, caret, this.realtimeState)
+            this.realtimeState = state
+
+            if (stableValue === this._lastStableValue) return
+            this._lastStableValue = stableValue
+
+            this._rebuildTags(stableValue.trim())
+            this._refreshTagDisplayOnly()
+        },
+        _onCaretMove() {
+            if (this.isComposing) return
+            if (document.activeElement !== this.textarea) return
+            const value = this.textarea.value
+            const caret = this.textarea.selectionStart
+            this.realtimeState = computeStableValue(value, caret, null).state
+            this._onRealtimeInput()
+        },
+        _onTextareaKeyup(e) {
+            const navKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']
+            if (navKeys.includes(e.key)) this._onCaretMove()
+        },
+        _onCompositionStart() {
+            this.isComposing = true
+        },
+        _onCompositionEnd() {
+            this.isComposing = false
+            this._onRealtimeInput()
+        },
+        _onTextareaBlur() {
+            this.realtimeState = null
+            this._lastStableValue = null
+            this.onTextareaChange(true)
+        },
+        _refreshTagDisplayOnly() {
+            this.$nextTick(() => {
+                if (!this.$refs.promptTagsList) return
+                for (let i = 0; i < this.$refs.promptTagsList.children.length; i++) {
+                    let tag = this.$refs.promptTagsList.children[i]
+                    if (!tag.classList.contains('prompt-tag')) continue
+                    let id = tag.getAttribute('data-id')
+                    let wrap = (this.$refs.promptTagWrap || []).find(wrap => {
+                        return wrap.getAttribute('data-id') === id
+                    })
+                    if (wrap) tag.parentNode.insertBefore(wrap, tag.nextElementSibling)
+                }
+            })
         },
         _setTextareaFocus() {
             if (typeof get_uiCurrentTabContent !== 'function') return
