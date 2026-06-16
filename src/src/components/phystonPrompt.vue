@@ -892,6 +892,19 @@ export default {
 
             let value = this.textarea.value.trim()
             if (value === this.prompt.trim()) return
+            const indexes = this._rebuildTags(value)
+            if (this.autoTranslateToLocal && event) {
+                // 启动了自动翻译到本地语言，并且用户手动触发的
+                let useNetwork = !(this.tagCompleteFile && this.onlyCsvOnAuto)
+                useNetwork = false // 浪费网络请求，先关闭网络翻译。
+                this.translates(indexes, true, useNetwork).finally(() => {
+                    this.updateTags()
+                })
+            } else {
+                this.updateTags()
+            }
+        },
+        _rebuildTags(value) {
             let tags = common.splitTags(value, this.autoBreakBeforeWrap, this.autoBreakAfterWrap)
 
             let disabledTags = []
@@ -901,7 +914,6 @@ export default {
                 }
             })
             disabledTags.forEach(({tag, index}) => {
-                // 插入到 tags 中
                 tags.splice(index, 0, tag.value)
             })
 
@@ -913,7 +925,6 @@ export default {
                 if (tag === "\n") {
                     this._appendTag("\n", "\n", false, -1, 'wrap')
                 } else {
-                    // if (tag.indexOf('Negative prompt:') === 0) break
                     let find = false
                     for (let item of oldTags) {
                         if (item.value === tag) {
@@ -923,20 +934,11 @@ export default {
                     }
                     const localValue = find ? find.localValue : ''
                     const disabled = find ? find.disabled : false
-                    const index = this._appendTag(tag, localValue, disabled, -1, 'text')
-                    if (!find && index !== -1) indexes.push(index)
+                    const idx = this._appendTag(tag, localValue, disabled, -1, 'text')
+                    if (!find && idx !== -1) indexes.push(idx)
                 }
             }
-            if (this.autoTranslateToLocal && event) {
-                // 启动了自动翻译到本地语言，并且用户手动触发的
-                let useNetwork = !(this.tagCompleteFile && this.onlyCsvOnAuto)
-                useNetwork = false // 浪费网络请求，先关闭网络翻译。
-                this.translates(indexes, true, useNetwork).finally(() => {
-                    this.updateTags()
-                })
-            } else {
-                this.updateTags()
-            }
+            return indexes
         },
         _setTextareaFocus() {
             if (typeof get_uiCurrentTabContent !== 'function') return
