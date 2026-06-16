@@ -1427,7 +1427,29 @@ export default {
         useHistory(history) {
             this.tags = []
             history.tags.forEach(item => {
-                this._appendTag(item.value, item.localValue, item.disabled, -1, item.type || 'text')
+                if (item.type === 'wrap') {
+                    this._appendTag("\n", "\n", false, -1, 'wrap')
+                    return
+                }
+                // Re-parse {a|b|c} tokens into variant groups on restore, exactly
+                // like _onTextareaChange. History (the original extension's own
+                // storage) is loaded on startup via _appendTag, which does not run
+                // the variant parser, so groups would otherwise render as plain
+                // text until the prompt is edited. (bugfix: initial-load split)
+                if (this.enableVariantGroupSplit) {
+                    const parsed = parseVariantGroup(item.value)
+                    if (parsed) {
+                        const tag = this._appendGroupTag(parsed, -1)
+                        if (tag) {
+                            if (item.disabled) tag.disabled = true
+                            return
+                        }
+                    }
+                }
+                // A group stored by an older session keeps type 'variantGroup'; if
+                // splitting is off (or it no longer parses) restore it as plain text.
+                const type = item.type === 'variantGroup' ? 'text' : (item.type || 'text')
+                this._appendTag(item.value, item.localValue, item.disabled, -1, type)
             })
             this.updateTags()
         },
@@ -1455,6 +1477,16 @@ export default {
             let tags = common.splitTags(prompt, this.autoBreakBeforeWrap, this.autoBreakAfterWrap)
             this.tags = []
             tags.forEach(tag => {
+                if (tag === "\n") {
+                    this._appendTag("\n", "\n", false, -1, 'wrap')
+                    return
+                }
+                // Mirror _onTextareaChange so {a|b|c} from a generated prompt is
+                // split into a variant group rather than a plain text tag. (bugfix)
+                if (this.enableVariantGroupSplit) {
+                    const parsed = parseVariantGroup(tag)
+                    if (parsed && this._appendGroupTag(parsed, -1)) return
+                }
                 this._appendTag(tag, '', false, -1, 'text')
             })
             this.updateTags()
@@ -1861,6 +1893,11 @@ export default {
                         } else {
                             value = value + ':' + common.formatWeight(weightNum)
                         }
+                    } else {
+                        // The leaf already carries a weight (e.g. (town:1.1)); replace
+                        // the existing number with the new one so spinning the input
+                        // actually updates the value (and thus the prompt). (bugfix)
+                        value = value.replace(common.weightNumRegex, '$1:' + common.formatWeight(weightNum))
                     }
                     if (!leaf.isLora && !leaf.isLyco && !leaf.isEmbedding && !common.hasBrackets(value)) {
                         if (this.useNovelAiWeightSymbol) {
